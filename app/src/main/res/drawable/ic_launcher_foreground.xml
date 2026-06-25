@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Coffee cup -->
+    <path
+        android:fillColor="#FAF7F4"
+        android:pathData="M20,3H4v10c0,2.21 1.79,4 4,4h6c2.21,0 4,-1.79 4,-4h2c1.11,0 2,-0.89 2,-2V5c0,-1.11 -0.89,-2 -2,-2zM20,7h-2V5h2v2zM4,3h14v2H4V3z"/>
+    <!-- Steam lines -->
+    <path
+        android:fillColor="#BCAAA4"
+        android:pathData="M8,1C8,0.45 7.55,0 7,0S6,0.45 6,1v1h2V1zM10,1C10,0.45 9.55,0 9,0S8,0.45 8,1v1h2V1zM12,1C12,0.45 11.55,0 11,0s-0.45,0.45 -0.45,1v1H12V1z"/>
+</vector>

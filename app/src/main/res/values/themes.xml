@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CoffeeMark" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#5D4037</item>
+        <item name="android:navigationBarColor">#FAF7F4</item>
+    </style>
+</resources>
