@@ -19,7 +19,10 @@ CoffeeMark 是一款面向手冲咖啡爱好者的 Android 应用，帮助你管
 
 ## 📱 预览
 
-> *截图待补充 — 运行 App 后截取四个主界面贴在此处*
+<img width="1200" height="2534" alt="53946c6e6e03b9d0b5070f5e3127726d" src="https://github.com/user-attachments/assets/3a0f15cb-8bde-4e1d-9ce3-a69eee8baf0b" />
+<img width="1200" height="2541" alt="971e17339005bb20c6ddbecf522f8c29" src="https://github.com/user-attachments/assets/17c0bf39-092e-4ac4-8a36-2c44c4a8cfa8" />
+<img width="1199" height="2535" alt="3e26cc7ae61f7859d4975ee110ef036a" src="https://github.com/user-attachments/assets/a05ee3d2-651c-4593-8d3c-c41ffa950a8a" />
+
 
 ---
 
