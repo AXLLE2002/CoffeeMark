@@ -36,7 +36,8 @@ data class RecipeEditState(
 
     // 编辑模式
     val isEditMode: Boolean = false,
-    val recipeId: String? = null
+    val recipeId: String? = null,
+    val isPreset: Boolean = false
 )
 
 data class RecipeStepState(
@@ -76,6 +77,7 @@ class RecipeEditViewModel(private val recipeId: String? = null) : ViewModel() {
                     totalWater = recipe.totalWater,
                     difficulty = recipe.difficulty,
                     source = recipe.source,
+                    isPreset = recipe.isPreset,
                     steps = steps.map { s ->
                         RecipeStepState(
                             id = s.id,
@@ -175,6 +177,7 @@ class RecipeEditViewModel(private val recipeId: String? = null) : ViewModel() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, error = null) }
             try {
+                val ratio = if (s.beanWeight > 0) s.totalWater / s.beanWeight else 0.0
                 val recipe = RecipeEntity(
                     id = s.recipeId ?: java.util.UUID.randomUUID().toString(),
                     name = s.name.trim(),
@@ -183,6 +186,8 @@ class RecipeEditViewModel(private val recipeId: String? = null) : ViewModel() {
                     beanWeight = s.beanWeight,
                     grindSize = s.grindSize,
                     totalWater = s.totalWater,
+                    ratio = ratio,
+                    isPreset = s.isPreset,
                     difficulty = s.difficulty,
                     source = s.source?.trim()?.ifBlank { null },
                     updatedAt = System.currentTimeMillis()

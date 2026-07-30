@@ -10,12 +10,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,10 +32,6 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 
-val CoffeeBrown = Color(0xFF6D4C41)
-val CoffeeCream = Color(0xFFEFEBE9)
-val CoffeeLight = Color(0xFFD7CCC8)
-
 @Composable
 fun BrewCalendarCard(
     currentMonth: YearMonth,
@@ -40,6 +41,7 @@ fun BrewCalendarCard(
     onToggle: () -> Unit,
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
@@ -68,9 +70,11 @@ fun BrewCalendarCard(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "📅",
-                    style = MaterialTheme.typography.titleMedium
+                Icon(
+                    Icons.Filled.CalendarMonth,
+                    contentDescription = "冲煮日历",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -82,21 +86,23 @@ fun BrewCalendarCard(
                 if (brewDates.isNotEmpty()) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = CoffeeBrown.copy(alpha = 0.15f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                     ) {
                         Text(
                             "${brewDates.size}天",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = CoffeeBrown
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
                 Spacer(Modifier.width(4.dp))
-                Text(
-                    if (isExpanded) "▲" else "▼",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Icon(
+                    imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp
+                                   else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "收起" else "展开",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -113,15 +119,12 @@ fun BrewCalendarCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        IconButton(
-                            onClick = onPrevMonth,
-                            enabled = canGoPrev,
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text(
-                                "◀",
-                                color = if (canGoPrev) MaterialTheme.colorScheme.onSurface
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        IconButton(onClick = onPrevMonth, enabled = canGoPrev) {
+                            Icon(
+                                Icons.Filled.ChevronLeft,
+                                contentDescription = "上个月",
+                                tint = if (canGoPrev) MaterialTheme.colorScheme.onSurface
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                             )
                         }
 
@@ -132,15 +135,12 @@ fun BrewCalendarCard(
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
 
-                        IconButton(
-                            onClick = onNextMonth,
-                            enabled = canGoNext,
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text(
-                                "▶",
-                                color = if (canGoNext) MaterialTheme.colorScheme.onSurface
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        IconButton(onClick = onNextMonth, enabled = canGoNext) {
+                            Icon(
+                                Icons.Filled.ChevronRight,
+                                contentDescription = "下个月",
+                                tint = if (canGoNext) MaterialTheme.colorScheme.onSurface
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                             )
                         }
                     }
@@ -159,7 +159,7 @@ fun BrewCalendarCard(
                                 textAlign = TextAlign.Center,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (name == "六" || name == "日")
-                                    CoffeeBrown else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -190,6 +190,7 @@ fun BrewCalendarCard(
                                         day = day,
                                         isBrewDay = isBrewDay,
                                         isToday = isToday,
+                                        onClick = if (isBrewDay) ({ onDateClick(date) }) else null,
                                         modifier = Modifier.weight(1f)
                                     )
                                 } else {
@@ -210,6 +211,7 @@ private fun DayCell(
     day: Int,
     isBrewDay: Boolean,
     isToday: Boolean,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -217,9 +219,14 @@ private fun DayCell(
             .aspectRatio(1f)
             .padding(2.dp)
             .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else Modifier
+            )
+            .then(
                 if (isBrewDay) {
                     Modifier.border(
-                        BorderStroke(2.dp, CoffeeBrown),
+                        BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
                         RoundedCornerShape(8.dp)
                     )
                 } else Modifier
@@ -243,7 +250,7 @@ private fun DayCell(
             ),
             color = when {
                 isToday -> MaterialTheme.colorScheme.primary
-                isBrewDay -> CoffeeBrown
+                isBrewDay -> MaterialTheme.colorScheme.primary
                 else -> MaterialTheme.colorScheme.onSurface
             },
             textAlign = TextAlign.Center

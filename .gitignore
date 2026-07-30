@@ -29,3 +29,10 @@ local.properties
 # OS
 Thumbs.db
 Desktop.ini
+
+# Personal / non-source (sanitization)
+.workbuddy/
+CoffeeMark_stage8_glass/
+icon.png
+*.jpg
+

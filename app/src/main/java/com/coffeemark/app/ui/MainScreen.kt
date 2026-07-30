@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -17,6 +19,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import com.coffeemark.app.navigation.Routes
 import com.coffeemark.app.navigation.TopLevelDestination
 import com.coffeemark.app.ui.beans.BeanDetailScreen
@@ -28,10 +35,12 @@ import com.coffeemark.app.ui.brewguide.BrewGuideScreen
 import com.coffeemark.app.ui.brewguide.BrewPrepareScreen
 import com.coffeemark.app.ui.brewlogs.BrewLogDetailScreen
 import com.coffeemark.app.ui.brewlogs.BrewLogEditScreen
+import com.coffeemark.app.ui.brewlogs.BrewLogDayListScreen
 import com.coffeemark.app.ui.brewlogs.BrewLogListScreen
 import com.coffeemark.app.ui.recipes.RecipeDetailScreen
 import com.coffeemark.app.ui.recipes.RecipeEditScreen
 import com.coffeemark.app.ui.recipes.RecipeListScreen
+import com.coffeemark.app.ui.theme.AmbientBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +59,7 @@ fun MainScreen() {
     val currentTabIcon = currentTab?.selectedIcon
 
     Scaffold(
+        containerColor = Color.Transparent,
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
@@ -91,14 +101,15 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        Column(Modifier.padding(innerPadding)) {
+        Box(Modifier.fillMaxSize()) {
+            AmbientBackground()
+            Column(Modifier.fillMaxSize().padding(innerPadding)) {
             // ── 共享顶部品牌栏（仅标签页显示）──
             if (showBottomBar) {
                 Surface(
                     modifier = Modifier
-                        .statusBarsPadding()
                         .fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.background,
+                    color = Color.Transparent,
                     tonalElevation = 2.dp,
                     shadowElevation = 0.dp
                 ) {
@@ -113,10 +124,15 @@ fun MainScreen() {
                                     imageVector = currentTabIcon,
                                     contentDescription = currentTabLabel,
                                     modifier = Modifier.size(24.dp),
-                                    tint = Color(0xFF6D4C41)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             } else {
-                                Text("☕", style = MaterialTheme.typography.titleLarge)
+                                Icon(
+                                    Icons.Filled.LocalCafe,
+                                    contentDescription = currentTabLabel,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                             }
                             Spacer(Modifier.width(10.dp))
                             Text(
@@ -151,7 +167,8 @@ fun MainScreen() {
                 composable(Routes.BREW_LOGS) {
                     BrewLogListScreen(
                         onBrewLogClick = { id -> navController.navigate(Routes.brewLogDetail(id)) },
-                        onCreateClick = { navController.navigate(Routes.brewLogEdit()) }
+                        onCreateClick = { navController.navigate(Routes.brewLogEdit()) },
+                        onDateClick = { millis -> navController.navigate(Routes.brewLogDay(millis)) }
                     )
                 }
                 composable(Routes.BEANS) {
@@ -164,7 +181,21 @@ fun MainScreen() {
                 // ── Recipe routes ──
                 composable(
                     route = Routes.RECIPE_DETAIL,
-                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
                     RecipeDetailScreen(
@@ -182,7 +213,21 @@ fun MainScreen() {
                         type = NavType.StringType
                         nullable = true
                         defaultValue = null
-                    })
+                    }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val recipeId = backStackEntry.arguments?.getString("recipeId")
                     RecipeEditScreen(
@@ -195,7 +240,21 @@ fun MainScreen() {
                 // ── Bean routes ──
                 composable(
                     route = Routes.BEAN_DETAIL,
-                    arguments = listOf(navArgument("beanId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("beanId") { type = NavType.StringType }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val beanId = backStackEntry.arguments?.getString("beanId") ?: return@composable
                     BeanDetailScreen(
@@ -212,7 +271,21 @@ fun MainScreen() {
                         type = NavType.StringType
                         nullable = true
                         defaultValue = null
-                    })
+                    }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val beanId = backStackEntry.arguments?.getString("beanId")
                     BeanEditScreen(
@@ -225,7 +298,21 @@ fun MainScreen() {
                 // ── BrewLog routes ──
                 composable(
                     route = Routes.BREW_LOG_DETAIL,
-                    arguments = listOf(navArgument("brewLogId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("brewLogId") { type = NavType.StringType }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val brewLogId = backStackEntry.arguments?.getString("brewLogId") ?: return@composable
                     BrewLogDetailScreen(
@@ -239,12 +326,39 @@ fun MainScreen() {
                     )
                 }
 
+                // ── 日历某日记录列表 ──
+                composable(
+                    route = Routes.BREW_LOG_DAY,
+                    arguments = listOf(navArgument("dateMillis") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val dateMillis = backStackEntry.arguments?.getLong("dateMillis") ?: return@composable
+                    BrewLogDayListScreen(
+                        dateMillis = dateMillis,
+                        onBrewLogClick = { id -> navController.navigate(Routes.brewLogDetail(id)) },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
                 composable(
                     route = Routes.BREW_LOG_EDIT,
                     arguments = listOf(
                         navArgument("brewLogId") { type = NavType.StringType; nullable = true; defaultValue = null },
                         navArgument("recipeId") { type = NavType.StringType; nullable = true; defaultValue = null }
-                    )
+                    ),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val brewLogId = backStackEntry.arguments?.getString("brewLogId")
                     val recipeId = backStackEntry.arguments?.getString("recipeId")
@@ -259,7 +373,21 @@ fun MainScreen() {
                 // ── Brew Guide routes ──
                 composable(
                     route = Routes.BREW_PREPARE,
-                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
                     BrewPrepareScreen(
@@ -271,7 +399,21 @@ fun MainScreen() {
 
                 composable(
                     route = Routes.BREW_GUIDE,
-                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
                     BrewGuideScreen(
@@ -282,7 +424,21 @@ fun MainScreen() {
 
                 composable(
                     route = Routes.BREW_COMPLETE,
-                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
+                    enterTransition = {
+                        fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(animationSpec = tween(150))
+                    },
+                    popEnterTransition = {
+                        fadeIn(animationSpec = tween(200))
+                    },
+                    popExitTransition = {
+                        fadeOut(animationSpec = tween(200)) +
+                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
+                    }
                 ) { backStackEntry ->
                     val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
                     BrewCompleteScreen(
@@ -301,6 +457,7 @@ fun MainScreen() {
                     )
                 }
             }
+        }
         }
     }
 }

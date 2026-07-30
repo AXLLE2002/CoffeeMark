@@ -18,7 +18,7 @@ import com.coffeemark.app.data.entity.*
         BeanEntity::class,
         BrewLogEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,7 +39,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private val MIGRATIONS = arrayOf(MIGRATION_1_2)
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE recipes ADD COLUMN ratio REAL NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE recipes ADD COLUMN is_preset INTEGER NOT NULL DEFAULT 0")
+                // 回填旧数据：ratio = 总水量 / 豆量
+                db.execSQL(
+                    "UPDATE recipes SET ratio = " +
+                    "CASE WHEN bean_weight > 0 THEN total_water * 1.0 / bean_weight ELSE 0 END"
+                )
+            }
+        }
+
+        private val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {

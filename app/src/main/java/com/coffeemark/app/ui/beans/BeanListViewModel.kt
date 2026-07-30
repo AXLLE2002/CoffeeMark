@@ -7,6 +7,7 @@ import com.coffeemark.app.CoffeemarkApp
 import com.coffeemark.app.data.entity.BeanEntity
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.YearMonth
 import java.time.ZoneId
 
@@ -23,7 +24,8 @@ data class BeanListState(
     val totalUsedPrice: Double = 0.0,
     val selectedMonth: YearMonth = YearMonth.now(),
     val beanUsage: List<BeanUsageItem> = emptyList(),
-    val usageTotalWeight: Double = 0.0
+    val usageTotalWeight: Double = 0.0,
+    val earliestBrewMonth: YearMonth? = null   // 首条冲煮记录所在月（日期下拉左边界）
 ) {
     /** 总剩余价格 = Σ (current_weight × price_per_gram)，实时计算 */
     val totalRemainingPrice: Double
@@ -61,6 +63,14 @@ class BeanListViewModel : ViewModel() {
             }
         }
         loadMonthlyUsage(YearMonth.now())
+        // 加载首条冲煮记录月份（日期下拉左边界）
+        viewModelScope.launch {
+            val earliest = brewLogDao.getEarliestBrewTime()
+            val month = earliest?.let {
+                YearMonth.from(Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()))
+            }
+            _state.update { it.copy(earliestBrewMonth = month) }
+        }
         // 监听冲煮记录变化，自动刷新饼图
         viewModelScope.launch {
             brewLogDao.getAll().collect {

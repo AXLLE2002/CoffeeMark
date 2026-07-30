@@ -7,10 +7,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coffeemark.app.ui.recipes.DetailRow
+import com.coffeemark.app.ui.components.DetailRow
+import com.coffeemark.app.ui.components.DetailSection
+import com.coffeemark.app.ui.components.ParamBadge
 import com.coffeemark.app.util.TimeFormatUtil
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,10 +43,19 @@ fun BrewLogDetailScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
         topBar = {
             TopAppBar(
-                title = { Text("记录详情") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("← 返回") } },
+                title = { Text("") },
+                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "返回"
+                        )
+                    }
+                },
                 actions = {
                     if (state.brewLog != null) {
                         TextButton(onClick = onEdit) { Text("编辑") }
@@ -46,7 +63,8 @@ fun BrewLogDetailScreen(
                             Text("删除", color = MaterialTheme.colorScheme.error)
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         bottomBar = {
@@ -72,61 +90,93 @@ fun BrewLogDetailScreen(
 
             Column(
                 modifier = Modifier.fillMaxSize().padding(innerPadding)
-                    .verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 评分
+                // 1. 评分 — 大数字 + 五角星
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("⭐".repeat(log.rating), style = MaterialTheme.typography.headlineMedium)
-                    Spacer(Modifier.width(8.dp))
-                    Text(log.ratingTag, style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary)
-                }
-
-                // 核心信息卡片
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DetailRow("豆子", state.bean?.name ?: "未知")
-                        DetailRow("用豆量", "${log.beanUsedWeight}g")
-                        state.recipe?.let { DetailRow("方案", it.name) }
-                            ?: log.customRecipeName?.let { DetailRow("方案", it) }
-                        DetailRow("粉重", "${log.groundWeight}g")
-                        DetailRow("注水量", "${log.totalWater}g")
-                        log.waterTemp?.let { DetailRow("水温", "${it}℃") }
-                        log.grinder?.let { DetailRow("磨豆机", it) }
-                        log.grindSize?.let { DetailRow("研磨度", it.label) }
-                        log.device?.let { DetailRow("器具", it) }
-                        DetailRow("总耗时", TimeFormatUtil.formatDuration(log.totalDuration))
-                    }
-                }
-
-                // 环境信息
-                if (log.location != null || log.weather != null || log.mood != null) {
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            log.location?.let { DetailRow("地点", it) }
-                            log.weather?.let { DetailRow("天气", it) }
-                            log.mood?.let { DetailRow("心情", it.label) }
-                            DetailRow("冲煮时间", dateFormat.format(Date(log.brewTime)))
+                    Text(
+                        "${log.rating}",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 56.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Row {
+                            repeat(5) { i ->
+                                Icon(
+                                    imageVector = if (i < log.rating) Icons.Filled.Star
+                                                  else Icons.Outlined.Star,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFB300),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
+                        Text(
+                            log.ratingTag,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
-                // 感受
+                // 2. 核心参数标签行
+                val ratioStr = if (log.groundWeight > 0)
+                    "1:${String.format("%.1f", log.totalWater / log.groundWeight)}" else null
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ParamBadge("${log.beanUsedWeight}g")
+                    if (ratioStr != null) ParamBadge(ratioStr)
+                    log.waterTemp?.let { ParamBadge("${it}℃") }
+                    log.grindSize?.let { ParamBadge(it.label) }
+                }
+
+                // 3. 冲煮参数详情
+                DetailSection(title = "冲煮参数") {
+                    DetailRow("豆子", state.bean?.name ?: "未知")
+                    DetailRow("用豆量", "${log.beanUsedWeight}g")
+                    state.recipe?.let { DetailRow("方案", it.name) }
+                        ?: log.customRecipeName?.let { DetailRow("方案", it) }
+                    DetailRow("粉重", "${log.groundWeight}g")
+                    DetailRow("注水量", "${log.totalWater}g")
+                    log.waterTemp?.let { DetailRow("水温", "${it}℃") }
+                    log.grinder?.let { DetailRow("磨豆机", it) }
+                    log.grindSize?.let { DetailRow("研磨度", it.label) }
+                    log.device?.let { DetailRow("器具", it) }
+                    DetailRow("总耗时", TimeFormatUtil.formatDuration(log.totalDuration))
+                }
+
+                // 4. 环境信息
+                if (log.location != null || log.weather != null || log.mood != null) {
+                    DetailSection(title = "环境") {
+                        log.location?.let { DetailRow("地点", it) }
+                        log.weather?.let { DetailRow("天气", it) }
+                        log.mood?.let { DetailRow("心情", it.label) }
+                        DetailRow("冲煮时间", dateFormat.format(Date(log.brewTime)))
+                    }
+                }
+
+                // 5. 感受
                 log.tastingNotes?.let { notes ->
-                    Text("感受", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
-                    Text(notes, style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    DetailSection(title = "感受") {
+                        Text(notes, style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
 
-                // 改进
+                // 6. 改进备注
                 log.improvementNotes?.let { notes ->
-                    Text("改进备注", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
-                    Text(notes, style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    DetailSection(title = "改进备注") {
+                        Text(notes, style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(32.dp))
             }
         }
 

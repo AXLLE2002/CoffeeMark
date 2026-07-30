@@ -2,8 +2,20 @@ package com.coffeemark.app.ui.beans
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -11,15 +23,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coffeemark.app.CoffeemarkApp
 import com.coffeemark.app.data.enums.BeanStatus
 import com.coffeemark.app.data.enums.BeanType
 import com.coffeemark.app.data.enums.RoastLevel
+import com.coffeemark.app.ui.components.AutoCompleteTextField
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.util.*
 
-val PRESET_FLAVOR_TAGS = listOf("水果", "花香", "坚果", "巧克力", "焦糖", "香料", "发酵", "草本", "茶感", "酒感")
 val SHELF_LIFE_QUICK = listOf(7, 14, 21, 30)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,13 +46,29 @@ fun BeanEditScreen(
     val state by viewModel.state.collectAsState()
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
+    // 加载咖啡参考数据库
+    val coffeeReference = remember { CoffeemarkApp.instance.coffeeReference }
+    val originSuggestions = remember { coffeeReference.originNames }
+    val processSuggestions = remember { coffeeReference.processNames }
+    val varietalSuggestions = remember { coffeeReference.varietalNames }
+    val allFlavorTags = remember { coffeeReference.allFlavorTags }
+
     LaunchedEffect(state.isSaved) { if (state.isSaved) onSaved() }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
         topBar = {
             TopAppBar(
                 title = { Text(if (state.isEditMode) "编辑豆子" else "添加豆子") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("取消") } },
+                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "返回"
+                        )
+                    }
+                },
                 actions = {
                     TextButton(onClick = { viewModel.save() }, enabled = !state.isSaving) {
                         Text("保存", color = MaterialTheme.colorScheme.primary)
@@ -49,7 +78,12 @@ fun BeanEditScreen(
         }
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
@@ -180,18 +214,37 @@ fun BeanEditScreen(
                 }
             }
 
-            // 产地信息
+            // 产地（联想输入）
             item {
-                OutlinedTextField(value = state.origin ?: "", onValueChange = { viewModel.updateOrigin(it.ifBlank { null }) },
-                    label = { Text("产地") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                AutoCompleteTextField(
+                    value = state.origin ?: "",
+                    onValueChange = { viewModel.updateOrigin(it.ifBlank { null }) },
+                    suggestions = originSuggestions,
+                    label = "产地",
+                    maxSuggestions = 6
+                )
             }
+
+            // 处理法（联想输入）
             item {
-                OutlinedTextField(value = state.process ?: "", onValueChange = { viewModel.updateProcess(it.ifBlank { null }) },
-                    label = { Text("处理法") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                AutoCompleteTextField(
+                    value = state.process ?: "",
+                    onValueChange = { viewModel.updateProcess(it.ifBlank { null }) },
+                    suggestions = processSuggestions,
+                    label = "处理法",
+                    maxSuggestions = 5
+                )
             }
+
+            // 豆种（联想输入）
             item {
-                OutlinedTextField(value = state.varietal ?: "", onValueChange = { viewModel.updateVarietal(it.ifBlank { null }) },
-                    label = { Text("豆种") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                AutoCompleteTextField(
+                    value = state.varietal ?: "",
+                    onValueChange = { viewModel.updateVarietal(it.ifBlank { null }) },
+                    suggestions = varietalSuggestions,
+                    label = "豆种",
+                    maxSuggestions = 6
+                )
             }
 
             // 烘豆商
@@ -337,7 +390,17 @@ fun BeanEditScreen(
                                 Spacer(Modifier.width(8.dp))
                             }
                             TextButton(onClick = { expanded = !expanded }) {
-                                Text(if (expanded) "收起 ▲" else "展开 ▼", style = MaterialTheme.typography.labelMedium)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        if (expanded) "收起" else "展开",
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                    Icon(
+                                        if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -353,7 +416,10 @@ fun BeanEditScreen(
                                         selected = true,
                                         onClick = { viewModel.removeFlavorTag(tag) },
                                         label = { Text(tag, style = MaterialTheme.typography.labelSmall) },
-                                        trailingIcon = { Text("×") },
+                                        trailingIcon = {
+                                            Icon(Icons.Filled.Close, contentDescription = "移除",
+                                                modifier = Modifier.size(14.dp))
+                                        },
                                         modifier = Modifier.height(28.dp)
                                     )
                                 }
@@ -363,34 +429,114 @@ fun BeanEditScreen(
                         // ── 展开区域 ──
                         if (expanded) {
                             Spacer(Modifier.height(12.dp))
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            HorizontalDivider(
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                            )
                             Spacer(Modifier.height(12.dp))
 
-                            // 预设风味选择
-                            Text("预设风味", style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(Modifier.height(8.dp))
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                PRESET_FLAVOR_TAGS.chunked(3).forEach { row ->
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        row.forEach { tag ->
-                                            val selected = tag in state.flavorTags
-                                            FilterChip(
-                                                selected = selected,
-                                                onClick = { viewModel.toggleFlavorTag(tag) },
-                                                label = {
-                                                    Text(tag, style = MaterialTheme.typography.labelSmall,
-                                                        modifier = Modifier.padding(horizontal = 2.dp))
-                                                },
-                                                modifier = Modifier.weight(1f)
+                            // 搜索风味标签
+                            var flavorSearchText by remember { mutableStateOf("") }
+                            OutlinedTextField(
+                                value = flavorSearchText,
+                                onValueChange = { flavorSearchText = it },
+                                label = { Text("搜索风味标签") },
+                                placeholder = { Text("输入关键词快速查找") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                                        contentDescription = "搜索"
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (flavorSearchText.isNotEmpty()) {
+                                        IconButton(onClick = { flavorSearchText = "" }) {
+                                            Icon(
+                                                imageVector = androidx.compose.material.icons.Icons.Default.Clear,
+                                                contentDescription = "清除"
                                             )
                                         }
-                                        // 补位占位
-                                        repeat(3 - row.size) {
-                                            Spacer(Modifier.weight(1f))
+                                    }
+                                }
+                            )
+
+                            Spacer(Modifier.height(12.dp))
+
+                            // 参考风味选择（从内置数据库加载）
+                            Text("参考风味", style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(8.dp))
+
+                            // 分组显示风味标签（每行可左右滑动）
+                            val flavorCategories = coffeeReference.flavorCategories
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                flavorCategories.forEach { category ->
+                                    // 根据搜索词过滤标签
+                                    val filteredTags = if (flavorSearchText.isBlank()) {
+                                        category.tags
+                                    } else {
+                                        category.tags.filter { tag ->
+                                            tag.contains(flavorSearchText, ignoreCase = true)
+                                        }
+                                    }
+
+                                    // 只显示有匹配标签的分类
+                                    if (filteredTags.isNotEmpty()) {
+                                        Column {
+                                            Text(
+                                                text = category.category,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(bottom = 4.dp)
+                                            )
+
+                                            // 带渐变遮罩的横向滚动行
+                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                val scrollState = rememberScrollState(0)
+                                                
+                                                Row(
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .horizontalScroll(scrollState)
+                                                ) {
+                                                    filteredTags.forEach { tag ->
+                                                        val selected = tag in state.flavorTags
+                                                        FilterChip(
+                                                            selected = selected,
+                                                            onClick = { viewModel.toggleFlavorTag(tag) },
+                                                            label = {
+                                                                Text(
+                                                                    text = tag,
+                                                                    style = MaterialTheme.typography.labelSmall,
+                                                                    modifier = Modifier.padding(horizontal = 2.dp)
+                                                                )
+                                                            },
+                                                            modifier = Modifier.height(28.dp)
+                                                        )
+                                                    }
+                                                }
+
+                                                // 渐变遮罩（右侧）
+                                                Box(
+                                                    modifier = Modifier
+                                                        .align(Alignment.CenterEnd)
+                                                        .width(32.dp)
+                                                        .height(28.dp)
+                                                        .background(
+                                                            brush = Brush.horizontalGradient(
+                                                                colors = listOf(
+                                                                    Transparent,
+                                                                    MaterialTheme.colorScheme.surfaceVariant
+                                                                ),
+                                                                startX = 0f,
+                                                                endX = 100f
+                                                            )
+                                                        )
+                                                )
+                                            }
                                         }
                                     }
                                 }

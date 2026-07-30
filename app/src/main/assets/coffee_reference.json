@@ -1,0 +1,394 @@
+{
+  "version": 1,
+  "generatedNote": "咖啡内置参考数据库（豆种 / 产地 / 处理法 / 风味）。数据来自 AnySearch 检索的公开资料（World Coffee Research、SCA 风味轮、各咖啡科普站），用于为 CoffeeMark 的 BeanEntity 提供建议值与可选标签。风味标签采用中文主显示 + 英文别名，便于中文 UI 直接复用。",
+  "species": [
+    {
+      "name": "阿拉比卡",
+      "nameEn": "Arabica",
+      "latin": "Coffea arabica",
+      "flavorTags": ["甜", "高酸", "风味复杂", "果香", "巧克力"],
+      "altitudeMeters": [1000, 2200],
+      "notes": "商业咖啡两大物种之一，占全球产量约 60-70%。风味更甜、酸质更明亮、复杂度更高，多生长于高海拔。普遍认为品质优于罗布斯塔。"
+    },
+    {
+      "name": "罗布斯塔",
+      "nameEn": "Robusta",
+      "latin": "Coffea canephora",
+      "flavorTags": ["苦", "醇厚", "花生", "巧克力", "泥土", "低酸"],
+      "altitudeMeters": [0, 800],
+      "notes": "占全球产量约 30%，耐病虫害、低海拔生长、咖啡因含量更高。风味偏苦、醇厚、有花生/泥土感，常用于意式拼配与速溶咖啡。"
+    }
+  ],
+  "varietals": [
+    {
+      "name": "铁皮卡",
+      "nameEn": "Typica",
+      "aliases": ["铁比卡", "Criollo", "Blue Mountain", "Java", "Sumatra", "蓝山"],
+      "species": "Arabica",
+      "typicalOrigins": ["牙买加", "夏威夷（科纳）", "秘鲁", "哥伦比亚", "多米尼加"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["干净", "清甜", "细腻", "花香", "柑橘"],
+      "altitudeMeters": [1200, 2000],
+      "notes": "最古老的栽培种之一，据信源自埃塞俄比亚，经也门传向世界。低产量、易染锈病，但杯质优雅清甜。牙买加蓝山、夏威夷科纳均为铁皮卡。"
+    },
+    {
+      "name": "波旁",
+      "nameEn": "Bourbon",
+      "aliases": ["红波旁", "Yellow Bourbon", "Pink Bourbon", "Orange Bourbon"],
+      "species": "Arabica",
+      "typicalOrigins": ["萨尔瓦多", "危地马拉", "巴西", "卢旺达", "布隆迪"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["复杂甜感", "红果", "焦糖", "核果", "红糖"],
+      "altitudeMeters": [1200, 2000],
+      "notes": "铁皮卡在留尼汪岛（旧称波旁岛）的自然突变。产量高于铁皮卡，甜感更复杂（焦糖、红糖、核果）。黄波旁、粉波旁、橙波旁为颜色突变种。"
+    },
+    {
+      "name": "卡杜拉",
+      "nameEn": "Caturra",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["哥伦比亚", "哥斯达黎加", "尼加拉瓜", "危地马拉"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["明亮酸质", "较轻Body", "干净"],
+      "altitudeMeters": [1200, 1800],
+      "notes": "1937 年发现于巴西的波旁自然突变，植株矮、产量好。酸质明亮、Body 较波旁轻，哥伦比亚与中美洲常见。"
+    },
+    {
+      "name": "卡杜艾",
+      "nameEn": "Catuai",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["巴西", "哥斯达黎加", "危地马拉", "洪都拉斯"],
+      "typicalProcesses": ["水洗", "半日晒"],
+      "flavorTags": ["温和", "平衡", "稳定"],
+      "altitudeMeters": [1000, 1700],
+      "notes": "1940 年代巴西培育的新世界(Mundo Novo) × 卡杜拉杂交种，以高产、抗病、风味稳定著称，巴西极为常见。"
+    },
+    {
+      "name": "瑰夏",
+      "nameEn": "Geisha",
+      "aliases": ["Gesha", "艺伎"],
+      "species": "Arabica",
+      "typicalOrigins": ["巴拿马", "哥伦比亚", "埃塞俄比亚", "哥斯达黎加"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["花香", "茉莉", "佛手柑", "热带水果"],
+      "altitudeMeters": [1500, 2000],
+      "notes": "源自埃塞俄比亚 Gori Gesha 森林，2004 年经巴拿马翡翠庄园(Hacienda La Esmeralda)发扬光大。风味极具花香与热带水果，是最昂贵稀有的阿拉比卡之一。"
+    },
+    {
+      "name": "SL28 / SL34",
+      "nameEn": "SL28 / SL34",
+      "aliases": ["Scott Laboratories"],
+      "species": "Arabica",
+      "typicalOrigins": ["肯尼亚"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["黑加仑", "番茄", "复杂酸质", "葡萄柚"],
+      "altitudeMeters": [1500, 2100],
+      "notes": "1930 年代肯尼亚 Scott Laboratories 选育。SL28 以黑加仑、番茄般复杂酸质著称，定义了肯尼亚咖啡的标志性风味。"
+    },
+    {
+      "name": "原生种",
+      "nameEn": "Heirloom",
+      "aliases": ["Ethiopian Landraces", "当地种"],
+      "species": "Arabica",
+      "typicalOrigins": ["埃塞俄比亚（耶加雪菲）", "埃塞俄比亚（西达摩）", "埃塞俄比亚（哈拉）", "埃塞俄比亚（古吉）"],
+      "typicalProcesses": ["水洗", "日晒"],
+      "flavorTags": ["蓝莓", "茉莉", "柑橘", "核果", "茶感"],
+      "altitudeMeters": [1500, 2200],
+      "notes": "埃塞俄比亚本地数千个咖啡品种的集合统称。因具体品种常未知或为多品种混合，包装上常仅标注 Heirloom。风味跨度极大。"
+    },
+    {
+      "name": "帕卡马拉",
+      "nameEn": "Pacamara",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["萨尔瓦多", "危地马拉", "尼加拉瓜"],
+      "typicalProcesses": ["水洗", "蜜处理"],
+      "flavorTags": ["大颗粒", "复杂", "甜瓜", "核果", "重Body"],
+      "altitudeMeters": [900, 1500],
+      "notes": "1958 年萨尔瓦多咖啡研究所用帕卡斯(Pacas) × 马拉戈吉佩(Maragogipe)杂交育成。豆粒硕大，风味复杂（醇厚、花香、果味兼具）。"
+    },
+    {
+      "name": "新世界",
+      "nameEn": "Mundo Novo",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["巴西"],
+      "typicalProcesses": ["半日晒", "水洗"],
+      "flavorTags": ["平衡", "甜", "巧克力"],
+      "altitudeMeters": [900, 1500],
+      "notes": "铁皮卡 × 波旁的天然杂交种，1940 年代发现于巴西。产量高、抗逆性强，是巴西主力商业品种之一。"
+    },
+    {
+      "name": "帕卡斯",
+      "nameEn": "Pacas",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["萨尔瓦多", "洪都拉斯"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["甜", "饱满Body", "复杂"],
+      "altitudeMeters": [1200, 1700],
+      "notes": "1949 年发现于萨尔瓦多某农场的波旁自然突变，植株矮、易采收，杯质优秀、Body 饱满。"
+    },
+    {
+      "name": "马拉戈吉佩",
+      "nameEn": "Maragogipe",
+      "aliases": ["象豆", "Elephant Bean"],
+      "species": "Arabica",
+      "typicalOrigins": ["巴西", "萨尔瓦多"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["大颗粒", "饱满Body"],
+      "altitudeMeters": [900, 1500],
+      "notes": "发现于巴西马拉戈吉佩的铁皮卡突变种，豆粒约为普通种三倍（象豆），Body 饱满。"
+    },
+    {
+      "name": "卡斯蒂略",
+      "nameEn": "Castillo",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["哥伦比亚"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["平衡", "柑橘", "焦糖"],
+      "altitudeMeters": [1300, 1900],
+      "notes": "哥伦比亚培育的抗叶锈杂交种（含铁皮卡/波旁/卡杜拉血统），抗病高产，是哥伦比亚现代主力商用品种。"
+    },
+    {
+      "name": "肯特",
+      "nameEn": "Kent",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["印度", "肯尼亚"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["平衡", "甜"],
+      "altitudeMeters": [1000, 1700],
+      "notes": "被认为是发现于印度的铁皮卡突变种，后引入肯尼亚并广泛种植，抗病性较好，风味平衡。"
+    },
+    {
+      "name": "塔比",
+      "nameEn": "Tabi",
+      "aliases": [],
+      "species": "Arabica",
+      "typicalOrigins": ["哥伦比亚（慧兰）", "哥伦比亚（纳里尼奥）"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["平衡", "甜", "饱满Body"],
+      "altitudeMeters": [1400, 2000],
+      "notes": "铁皮卡 × 波旁 × 提姆(Timor)的哥伦比亚杂交种，名称取自瓜姆比亚诺语「好」。抗病、多用于哥伦比亚精品批次。"
+    }
+  ],
+  "origins": [
+    {
+      "name": "埃塞俄比亚",
+      "nameEn": "Ethiopia",
+      "typicalVarietals": ["原生种", "瑰夏"],
+      "typicalProcesses": ["水洗", "日晒"],
+      "flavorTags": ["花香", "蓝莓", "柑橘", "茉莉", "茶感"],
+      "acidity": "高",
+      "body": "轻",
+      "notes": "咖啡的发源地，生物多样性极高。高海拔种植带来集中糖分与层次香气；小农多以小批量水洗/日晒处理。"
+    },
+    {
+      "name": "哥伦比亚",
+      "nameEn": "Colombia",
+      "typicalVarietals": ["卡杜拉", "卡斯蒂略", "塔比", "铁皮卡"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["平衡", "焦糖", "核果", "柔和酸"],
+      "acidity": "中",
+      "body": "中",
+      "notes": "全球前三大产国。经典哥伦比亚风味为柔和高酸 + 明显焦糖甜，带坚果/核果底韵，是北美最易识别的咖啡口味。"
+    },
+    {
+      "name": "肯尼亚",
+      "nameEn": "Kenya",
+      "typicalVarietals": ["SL28", "SL34"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["黑加仑", "西柚", "番茄般酸质", "复杂"],
+      "acidity": "高",
+      "body": "中",
+      "notes": "以 SL28/SL34 定义标志性的黑加仑与番茄般复杂酸质，风味强烈、结构感强，几乎仅产水洗豆。"
+    },
+    {
+      "name": "危地马拉",
+      "nameEn": "Guatemala",
+      "typicalVarietals": ["波旁", "卡杜拉", "卡杜艾"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["苹果酸", "巧克力", "黄油", "香料", "平衡"],
+      "acidity": "中高",
+      "body": "中",
+      "notes": "因气候、海拔与普遍水洗处理，常呈现苹果般果酸与可可/香料甜，整体均衡，「平衡」是常见评价词。"
+    },
+    {
+      "name": "巴西",
+      "nameEn": "Brazil",
+      "typicalVarietals": ["波旁", "卡杜艾", "新世界"],
+      "typicalProcesses": ["半日晒", "日晒", "水洗"],
+      "flavorTags": ["花生", "巧克力", "香料", "重Body", "低酸"],
+      "acidity": "低",
+      "body": "重",
+      "notes": "产量巨大的产国，风味跨度广。半日晒/日晒豆常带明显的花生感与重Body、巧克力甜，是意式拼配的常见基底。"
+    },
+    {
+      "name": "印度尼西亚",
+      "nameEn": "Indonesia",
+      "typicalVarietals": ["铁皮卡（曼特宁）", "Catimor", "罗布斯塔"],
+      "typicalProcesses": ["湿刨（Giling Basah）"],
+      "flavorTags": ["泥土", "草本", "香料", "重Body", "烟熏"],
+      "acidity": "低",
+      "body": "重",
+      "notes": "以湿刨法(Giling Basah)处理著称，产生独特的泥土、草本、香料与烟熏感，Body 厚重，是印尼咖啡的标志。"
+    },
+    {
+      "name": "哥斯达黎加",
+      "nameEn": "Costa Rica",
+      "typicalVarietals": ["卡杜拉", "卡杜艾", "瑰夏"],
+      "typicalProcesses": ["水洗", "蜜处理"],
+      "flavorTags": ["明亮", "干净", "蜂蜜甜"],
+      "acidity": "中高",
+      "body": "中",
+      "notes": "以干净明亮著称，蜜处理(Honey)工艺成熟，常带来圆润的蜂蜜甜感。"
+    },
+    {
+      "name": "巴拿马",
+      "nameEn": "Panama",
+      "typicalVarietals": ["瑰夏"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["花香", "茉莉", "佛手柑", "柑橘"],
+      "acidity": "高",
+      "body": "轻中",
+      "notes": "因翡翠庄园的瑰夏而享誉全球，以极致花香与佛手柑风味定义「精品瑰夏」标杆。"
+    },
+    {
+      "name": "卢旺达",
+      "nameEn": "Rwanda",
+      "typicalVarietals": ["波旁"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["明亮", "红果", "红茶", "黑樱桃"],
+      "acidity": "中高",
+      "body": "中",
+      "notes": "以波旁（尤其 Mibirizi 亚型）为主，杯质明亮、结构感强，带红樱桃与红茶感。"
+    },
+    {
+      "name": "萨尔瓦多",
+      "nameEn": "El Salvador",
+      "typicalVarietals": ["波旁", "帕卡马拉"],
+      "typicalProcesses": ["水洗", "蜜处理"],
+      "flavorTags": ["平衡", "甜", "红果"],
+      "acidity": "中",
+      "body": "中",
+      "notes": "波旁是国家身份象征，帕卡马拉亦源出此处。整体平衡、甜感明显。"
+    },
+    {
+      "name": "洪都拉斯",
+      "nameEn": "Honduras",
+      "typicalVarietals": ["卡杜拉", "卡杜艾", "帕卡斯"],
+      "typicalProcesses": ["水洗"],
+      "flavorTags": ["平衡", "干净", "焦糖"],
+      "acidity": "中",
+      "body": "中",
+      "notes": "因相似气候与普遍水洗处理，风味常与危地马拉相近，干净、均衡、带焦糖甜。"
+    },
+    {
+      "name": "印度",
+      "nameEn": "India",
+      "typicalVarietals": ["肯特", "罗布斯塔"],
+      "typicalProcesses": ["水洗", "日晒"],
+      "flavorTags": ["醇厚", "香料", "低酸"],
+      "acidity": "低",
+      "body": "重",
+      "notes": "以肯特等阿拉比卡与大量罗布斯塔著称，风味醇厚、带香料感，常用于拼配与速溶。"
+    },
+    {
+      "name": "也门",
+      "nameEn": "Yemen",
+      "typicalVarietals": ["铁皮卡（也门种）"],
+      "typicalProcesses": ["日晒"],
+      "flavorTags": ["野性", "发酵感", "巧克力", "香料", "酒香"],
+      "acidity": "中",
+      "body": "重",
+      "notes": "最古老的咖啡产区之一，传统日晒处理带来野性、发酵感与酒香，风味独特、辨识度极高。"
+    }
+  ],
+  "processes": [
+    {
+      "name": "水洗",
+      "nameEn": "Washed",
+      "aliases": ["Wet", "湿处理"],
+      "flavorTags": ["干净", "明亮酸质", "柑橘", "花香", "核果", "较轻Body"],
+      "notes": "采收后去皮去果胶并水洗发酵干燥。豆子与果肉糖分接触少，突出干净、透明、明亮的酸质，能凸显品种与产地特性。"
+    },
+    {
+      "name": "日晒",
+      "nameEn": "Natural",
+      "aliases": ["Dry", "干处理"],
+      "flavorTags": ["甜", "果味", "重Body", "发酵感"],
+      "notes": "整颗咖啡果带皮干燥后再脱壳。豆子长时间接触果糖与发酵微生物，风味更甜、更果味、Body 更重。"
+    },
+    {
+      "name": "蜜处理",
+      "nameEn": "Honey",
+      "aliases": ["Pulped natural", "半日晒"],
+      "flavorTags": ["甜", "果味", "圆润", "平衡"],
+      "notes": "脱去果皮后保留部分黏液干燥，按保留量分白/黄/红/黑蜜。介于水洗与日晒之间，甜感与果味兼具、口感圆润。"
+    },
+    {
+      "name": "厌氧",
+      "nameEn": "Anaerobic",
+      "aliases": ["Anaerobic fermentation", "实验性发酵"],
+      "flavorTags": ["强烈", "复杂", "发酵感", "酒香"],
+      "notes": "在密闭控氧环境中发酵的实验性处理法，常产生强烈、复杂、有时两极分化的风味（明显发酵感与酒香）。"
+    },
+    {
+      "name": "湿刨",
+      "nameEn": "Wet-hulled",
+      "aliases": ["Giling Basah"],
+      "flavorTags": ["泥土", "饱满Body", "草本", "香料"],
+      "notes": "印尼特有处理法：湿润状态下脱壳再干燥，产生独特的泥土、草本与香料感，Body 厚重。"
+    }
+  ],
+  "flavorTags": [
+    {
+      "category": "花香",
+      "categoryEn": "Floral",
+      "tags": ["茉莉", "玫瑰", "洋甘菊", "红茶", "花香"]
+    },
+    {
+      "category": "水果",
+      "categoryEn": "Fruity",
+      "tags": ["莓果", "黑莓", "树莓", "蓝莓", "草莓", "干果", "葡萄干", "西梅", "苹果", "梨", "桃", "葡萄", "樱桃", "石榴", "椰子", "菠萝", "柑橘", "柠檬", "西柚", "橙子", "青柠"]
+    },
+    {
+      "category": "甜",
+      "categoryEn": "Sweet",
+      "tags": ["甜", "糖蜜", "枫糖浆", "红糖", "焦糖", "蜂蜜", "香草"]
+    },
+    {
+      "category": "坚果/可可",
+      "categoryEn": "Nutty/Cocoa",
+      "tags": ["坚果", "杏仁", "榛子", "花生", "可可", "巧克力", "黑巧克力"]
+    },
+    {
+      "category": "香料",
+      "categoryEn": "Spices",
+      "tags": ["胡椒", "茴香", "肉豆蔻", "肉桂", "丁香", "棕香"]
+    },
+    {
+      "category": "烘焙",
+      "categoryEn": "Roasted",
+      "tags": ["烟草", "烟斗烟草", "灰", "焦", "烟熏", "烘焙", "谷物", "麦芽"]
+    },
+    {
+      "category": "酸/发酵",
+      "categoryEn": "Sour/Fermented",
+      "tags": ["酸", "醋酸", "柠檬酸", "苹果酸", "酒精", "威士忌", "酒香", "发酵", "过熟"]
+    },
+    {
+      "category": "绿色/植物",
+      "categoryEn": "Green/Vegetative",
+      "tags": ["橄榄油", "生青", "未熟", "豌豆荚", "青草", "草本", "干草", "豆腥"]
+    },
+    {
+      "category": "其他",
+      "categoryEn": "Other",
+      "tags": ["陈旧", "纸感", "纸板", "泥土", "霉味", "木质", "化学", "苦", "咸", "药味", "橡胶"]
+    }
+  ]
+}

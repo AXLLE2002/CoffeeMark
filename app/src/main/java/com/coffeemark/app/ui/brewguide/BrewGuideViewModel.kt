@@ -24,7 +24,7 @@ data class BrewGuideState(
     val isRunning: Boolean = false,
     val isFinished: Boolean = false,
     val isLoading: Boolean = true,
-    val soundStatus: String = "🔊 提示音就绪",
+    val soundStatus: String = "提示音就绪",
     val countdownNumber: Int = 0  // 0=不在倒计时, 3/2/1=开场倒计时
 ) {
     val currentStep: RecipeStepEntity?
@@ -39,6 +39,9 @@ data class BrewGuideState(
     val totalTargetWater: Double
         get() = steps.sumOf { it.waterAmount }
 
+    val cumulativeTargetWater: Double
+        get() = steps.take(currentStepIndex + 1).sumOf { it.waterAmount }
+
     val stepProgress: Float
         get() {
             val step = currentStep ?: return 0f
@@ -48,7 +51,10 @@ data class BrewGuideState(
         }
 }
 
-class BrewGuideViewModel(private val recipeId: String) : ViewModel() {
+class BrewGuideViewModel(
+    private val recipeId: String,
+    private val dose: Double? = null   // 准备界面传入的豆量；null 表示用模板基准值
+) : ViewModel() {
 
     private val recipeDao = CoffeemarkApp.instance.database.recipeDao()
     private val stepDao = CoffeemarkApp.instance.database.recipeStepDao()
@@ -68,12 +74,40 @@ class BrewGuideViewModel(private val recipeId: String) : ViewModel() {
         viewModelScope.launch {
             val recipe = recipeDao.getById(recipeId)
             val steps = stepDao.getByRecipeIdOnce(recipeId)
-            _state.update { it.copy(recipe = recipe, steps = steps, isLoading = false) }
+            if (recipe != null) {
+                // 按豆量缩放：各阶段水量按比例缩放，总水量=豆量×粉水比，时长不变；模板本身不被改写
+                val (scaledRecipe, scaledSteps) = scaleToDose(recipe, steps, dose)
+                _state.update { it.copy(recipe = scaledRecipe, steps = scaledSteps, isLoading = false) }
+            } else {
+                _state.update { it.copy(isLoading = false) }
+            }
             if (pendingStart) {
                 pendingStart = false
                 doStart()
             }
         }
+    }
+
+    /**
+     * 模板缩放：factor = dose / 基准粉量；各阶段 waterAmount 等比缩放（占比不变），
+     * recipe.totalWater 同步缩放，ratio 保持。仅作用于内存 state，不回写数据库。
+     */
+    private fun scaleToDose(
+        baseRecipe: RecipeEntity,
+        baseSteps: List<RecipeStepEntity>,
+        dose: Double?
+    ): Pair<RecipeEntity, List<RecipeStepEntity>> {
+        if (dose == null || dose <= 0.0 || baseRecipe.beanWeight <= 0.0) {
+            return baseRecipe to baseSteps
+        }
+        val factor = dose / baseRecipe.beanWeight
+        val scaledSteps = baseSteps.map { it.copy(waterAmount = it.waterAmount * factor) }
+        val scaledRecipe = baseRecipe.copy(
+            beanWeight = dose,
+            totalWater = baseRecipe.totalWater * factor,
+            ratio = baseRecipe.ratio
+        )
+        return scaledRecipe to scaledSteps
     }
 
     /** 初始化音效（AudioTrack 纯 PCM 正弦波，不依赖任何引擎） */
@@ -82,10 +116,10 @@ class BrewGuideViewModel(private val recipeId: String) : ViewModel() {
             try {
                 playTone(800.0, 30)
                 soundOk = true
-                _state.update { it.copy(soundStatus = "🔊 提示音就绪") }
+                _state.update { it.copy(soundStatus = "提示音就绪") }
             } catch (e: Exception) {
                 soundOk = false
-                _state.update { it.copy(soundStatus = "🔇 提示音不可用") }
+                _state.update { it.copy(soundStatus = "提示音不可用") }
             }
         }
     }
@@ -256,9 +290,13 @@ class BrewGuideViewModel(private val recipeId: String) : ViewModel() {
         timerJob?.cancel()
     }
 
-    class Factory(private val recipeId: String) : ViewModelProvider.Factory {
+    class Factory(
+        private val recipeId: String,
+        private val dose: Double? = null
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T = BrewGuideViewModel(recipeId) as T
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            BrewGuideViewModel(recipeId, dose) as T
     }
 }
 

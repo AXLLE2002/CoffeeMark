@@ -8,6 +8,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coffeemark.app.CoffeemarkApp
@@ -27,13 +31,14 @@ fun BrewCompleteScreen(
     // 系统返回键 → 回到冲煮记录列表
     BackHandler(onBack = onBackToRecipes)
 
-    Scaffold { innerPadding ->
+    Scaffold(contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)) { innerPadding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(innerPadding).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("🎉", style = MaterialTheme.typography.displayLarge)
+            Icon(Icons.Filled.EmojiEvents, null, Modifier.size(72.dp),
+                tint = Color(0xFFFFB300))  // 金色奖杯
             Spacer(Modifier.height(24.dp))
 
             Text("冲煮完成", style = MaterialTheme.typography.displayLarge,
@@ -57,7 +62,11 @@ fun BrewCompleteScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Text("📝 去记录", style = MaterialTheme.typography.labelLarge)
+                Row {
+                    Icon(Icons.Filled.EditNote, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("去记录")
+                }
             }
 
             Spacer(Modifier.height(12.dp))

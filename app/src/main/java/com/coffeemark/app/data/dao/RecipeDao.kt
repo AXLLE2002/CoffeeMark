@@ -24,4 +24,7 @@ interface RecipeDao {
 
     @Query("DELETE FROM recipes WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("SELECT COUNT(*) FROM recipes WHERE is_preset = 1")
+    suspend fun countPreset(): Int
 }

@@ -145,7 +145,7 @@ class BrewLogEditViewModel(
             _state.update {
                 it.copy(
                     recipeId = recipe.id, recipe = recipe,
-                    groundWeight = recipe.beanWeight,
+                    beanUsedWeight = recipe.beanWeight,   // 方案粉重 → 预填用豆量
                     totalWater = recipe.totalWater,
                     waterTemp = recipe.waterTemp,
                     grindSize = recipe.grindSize,
@@ -160,7 +160,7 @@ class BrewLogEditViewModel(
             it.copy(
                 totalDuration = data.totalDuration,
                 recipeId = data.recipeId,
-                groundWeight = data.groundWeight,
+                beanUsedWeight = data.groundWeight,   // 引导页粉重 → 预填用豆量
                 totalWater = data.totalWater,
                 waterTemp = data.waterTemp,
                 grindSize = data.grindSize,
@@ -185,7 +185,6 @@ class BrewLogEditViewModel(
         val maxWeight = _state.value.selectedBean?.currentWeight?.coerceAtLeast(0.0) ?: Double.MAX_VALUE
         _state.update { it.copy(beanUsedWeight = v.coerceAtMost(maxWeight).coerceAtLeast(0.0)) }
     }
-    fun updateGroundWeight(v: Double) = _state.update { it.copy(groundWeight = v) }
     fun updateTotalWater(v: Double) = _state.update { it.copy(totalWater = v) }
     fun updateWaterTemp(v: Int?) = _state.update { it.copy(waterTemp = v?.coerceIn(0, 100)) }
     fun updateGrinder(v: String?) = _state.update { it.copy(grinder = v?.trim()?.ifBlank { null }) }
@@ -230,7 +229,7 @@ class BrewLogEditViewModel(
                     beanUsedWeight = s.beanUsedWeight,
                     recipeId = s.recipeId,
                     customRecipeName = s.customRecipeName,
-                    groundWeight = s.groundWeight,
+                    groundWeight = s.beanUsedWeight,  // 粉重自动等于用豆量
                     totalWater = s.totalWater,
                     waterTemp = s.waterTemp,
                     grinder = s.grinder,

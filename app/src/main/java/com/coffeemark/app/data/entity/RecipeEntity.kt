@@ -31,6 +31,12 @@ data class RecipeEntity(
     @ColumnInfo(name = "total_water")
     val totalWater: Double,     // g
 
+    @ColumnInfo(name = "ratio")
+    val ratio: Double = 0.0,    // 粉水比（水:粉），如 15.0 表示 1:15；模板缩放依据
+
+    @ColumnInfo(name = "is_preset")
+    val isPreset: Boolean = false,  // 是否为内置模板
+
     @ColumnInfo(name = "difficulty")
     val difficulty: Difficulty? = null,
 

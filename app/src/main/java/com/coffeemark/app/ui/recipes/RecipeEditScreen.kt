@@ -15,6 +15,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coffeemark.app.data.enums.Difficulty
 import com.coffeemark.app.data.enums.GrindSize
 import com.coffeemark.app.data.enums.StepActionType
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,11 +38,18 @@ fun RecipeEditScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
         topBar = {
             TopAppBar(
                 title = { Text(if (state.isEditMode) "编辑方案" else "新建方案") },
+                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
                 navigationIcon = {
-                    TextButton(onClick = onBack) { Text("取消") }
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "返回"
+                        )
+                    }
                 },
                 actions = {
                     TextButton(
@@ -52,6 +64,8 @@ fun RecipeEditScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
@@ -297,13 +311,17 @@ fun StepEditCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(onClick = onMoveUp, modifier = Modifier.size(32.dp)) {
-                    Text("▲", style = MaterialTheme.typography.labelSmall)
+                    Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "上移",
+                        modifier = Modifier.size(18.dp))
                 }
                 IconButton(onClick = onMoveDown, modifier = Modifier.size(32.dp)) {
-                    Text("▼", style = MaterialTheme.typography.labelSmall)
+                    Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "下移",
+                        modifier = Modifier.size(18.dp))
                 }
                 IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                    Text("✕", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Filled.Close, contentDescription = "删除",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.error)
                 }
             }
 

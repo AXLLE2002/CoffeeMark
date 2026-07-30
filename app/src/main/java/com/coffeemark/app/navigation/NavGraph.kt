@@ -66,8 +66,11 @@ object Routes {
     // ── BrewLog routes ──
     const val BREW_LOG_DETAIL = "brew_logs/{brewLogId}"
     const val BREW_LOG_EDIT = "brew_logs/edit?brewLogId={brewLogId}&recipeId={recipeId}"
+    // ── 日历某日记录列表（点击有记录的日期跳转）──
+    const val BREW_LOG_DAY = "brew_logs/day/{dateMillis}"
 
     fun brewLogDetail(brewLogId: String) = "brew_logs/$brewLogId"
+    fun brewLogDay(dateMillis: Long) = "brew_logs/day/$dateMillis"
     fun brewLogEdit(brewLogId: String? = null, recipeId: String? = null): String {
         val params = mutableListOf<String>()
         brewLogId?.let { params.add("brewLogId=$it") }
@@ -78,10 +81,11 @@ object Routes {
 
     // ── Brew Guide routes ──
     const val BREW_PREPARE = "brew/prepare/{recipeId}"
-    const val BREW_GUIDE = "brew/guide/{recipeId}"
+    const val BREW_GUIDE = "brew/guide/{recipeId}?dose={dose}"
     const val BREW_COMPLETE = "brew/complete/{recipeId}"
 
     fun brewPrepare(recipeId: String) = "brew/prepare/$recipeId"
-    fun brewGuide(recipeId: String) = "brew/guide/$recipeId"
+    fun brewGuide(recipeId: String, dose: Double? = null) =
+        if (dose != null) "brew/guide/$recipeId?dose=$dose" else "brew/guide/$recipeId"
     fun brewComplete(recipeId: String) = "brew/complete/$recipeId"
 }

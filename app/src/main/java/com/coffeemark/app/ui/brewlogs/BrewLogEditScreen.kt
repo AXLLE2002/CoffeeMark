@@ -11,6 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Description
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coffeemark.app.data.enums.GrindSize
 import com.coffeemark.app.data.enums.Mood
@@ -37,10 +43,19 @@ fun BrewLogEditScreen(
     LaunchedEffect(state.isSaved) { if (state.isSaved) onSaved() }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
         topBar = {
             TopAppBar(
                 title = { Text(if (state.isEditMode) "编辑记录" else "新建记录") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("取消") } },
+                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "返回"
+                        )
+                    }
+                },
                 actions = {
                     TextButton(onClick = { viewModel.save() }, enabled = !state.isSaving) {
                         Text("保存", color = MaterialTheme.colorScheme.primary)
@@ -50,7 +65,12 @@ fun BrewLogEditScreen(
         }
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
@@ -159,8 +179,13 @@ fun BrewLogEditScreen(
                         Card(colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                         ) {
-                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text("📋", style = MaterialTheme.typography.titleMedium)
+                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Description,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                                 Spacer(Modifier.width(8.dp))
                                 Column {
                                     Text(state.recipe!!.name, fontWeight = FontWeight.Medium)
@@ -181,34 +206,20 @@ fun BrewLogEditScreen(
                 )
             }
 
-            // ── 冲煮参数 ──
+            // ── 冲煮参数 ──（粉重已移除，保存时粉重自动 = 用豆量）
             item {
-                var groundText by remember(state.groundWeight) {
-                    mutableStateOf(if (state.groundWeight == 0.0) "" else state.groundWeight.let { if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString() })
-                }
                 var waterText by remember(state.totalWater) {
                     mutableStateOf(if (state.totalWater == 0.0) "" else state.totalWater.let { if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString() })
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = groundText,
-                        onValueChange = { input ->
-                            groundText = input
-                            input.toDoubleOrNull()?.let(viewModel::updateGroundWeight)
-                        },
-                        label = { Text("粉重 (g)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f), singleLine = true
-                    )
-                    OutlinedTextField(
-                        value = waterText,
-                        onValueChange = { input ->
-                            waterText = input
-                            input.toDoubleOrNull()?.let(viewModel::updateTotalWater)
-                        },
-                        label = { Text("注水量 (g)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f), singleLine = true
-                    )
-                }
+                OutlinedTextField(
+                    value = waterText,
+                    onValueChange = { input ->
+                        waterText = input
+                        input.toDoubleOrNull()?.let(viewModel::updateTotalWater)
+                    },
+                    label = { Text("注水量 (g)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
             }
 
             item {
@@ -317,8 +328,13 @@ fun BrewLogEditScreen(
                     (1..5).forEach { star ->
                         TextButton(onClick = { viewModel.updateRating(star) },
                             modifier = Modifier.size(48.dp)) {
-                            Text(if (star <= state.rating) "⭐" else "☆",
-                                style = MaterialTheme.typography.headlineMedium)
+                            Icon(
+                                if (star <= state.rating) Icons.Filled.Star else Icons.Filled.StarBorder,
+                                contentDescription = null,
+                                modifier = Modifier.size(28.dp),
+                                tint = if (star <= state.rating) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                     Text(RATING_LABELS[state.rating - 1],
@@ -419,7 +435,7 @@ private fun TimePickerCard(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("📅", style = MaterialTheme.typography.titleMedium)
+            Icon(Icons.Filled.CalendarMonth, null, Modifier.size(24.dp))
             Spacer(Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(

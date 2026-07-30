@@ -36,3 +36,15 @@ val DarkSurface = Color(0xFF2C2826)
 val DarkSurfaceVariant = Color(0xFF3D3835)
 val OnDarkSurface = Color(0xFFEDE0D4)
 val OnDarkSurfaceMuted = Color(0xFFBCAAA4)
+
+// ── Chart Palette ──
+val CoffeeChartPalette = listOf(
+    CoffeeBrown,          // #5D4037 深咖
+    Color(0xFFD7CCC8),    // 浅棕
+    CoffeeBrownVariant,   // #795548 中咖
+    Caramel,              // #FF8A65 焦糖
+    CaramelLight,         // #FFAB91 浅橙
+    CoffeeLight,          // #A1887F 灰棕
+    Color(0xFFBCAAA4),    // 米棕
+    CoffeeBrownDark,      // #4E342E 深咖2
+)
