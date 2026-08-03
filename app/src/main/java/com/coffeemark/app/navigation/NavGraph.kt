@@ -81,11 +81,16 @@ object Routes {
 
     // ── Brew Guide routes ──
     const val BREW_PREPARE = "brew/prepare/{recipeId}"
-    const val BREW_GUIDE = "brew/guide/{recipeId}?dose={dose}"
+    const val BREW_GUIDE = "brew/guide/{recipeId}?dose={dose}&beanId={beanId}"
     const val BREW_COMPLETE = "brew/complete/{recipeId}"
 
     fun brewPrepare(recipeId: String) = "brew/prepare/$recipeId"
-    fun brewGuide(recipeId: String, dose: Double? = null) =
-        if (dose != null) "brew/guide/$recipeId?dose=$dose" else "brew/guide/$recipeId"
+    fun brewGuide(recipeId: String, dose: Double? = null, beanId: String? = null): String {
+        val params = mutableListOf<String>()
+        dose?.let { params.add("dose=$it") }
+        beanId?.let { params.add("beanId=$it") }
+        val query = if (params.isEmpty()) "" else "?${params.joinToString("&")}"
+        return "brew/guide/$recipeId$query"
+    }
     fun brewComplete(recipeId: String) = "brew/complete/$recipeId"
 }

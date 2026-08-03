@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.coffeemark.app.CoffeemarkApp
 import com.coffeemark.app.data.entity.RecipeEntity
 import com.coffeemark.app.data.entity.RecipeStepEntity
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,16 +28,15 @@ class RecipeDetailViewModel(private val recipeId: String) : ViewModel() {
     val state: StateFlow<RecipeDetailState> = _state.asStateFlow()
 
     init {
-        load()
-    }
-
-    private fun load() {
+        // 监听方案与步骤流：从编辑页保存后返回本页会实时刷新
         viewModelScope.launch {
-            val recipe = recipeDao.getById(recipeId)
-            val steps = stepDao.getByRecipeIdOnce(recipeId)
-            _state.update {
-                it.copy(recipe = recipe, steps = steps, isLoading = false)
-            }
+            recipeDao.observeById(recipeId)
+                .combine(stepDao.getByRecipeId(recipeId)) { recipe, steps ->
+                    recipe to steps
+                }
+                .collect { (recipe, steps) ->
+                    _state.update { it.copy(recipe = recipe, steps = steps, isLoading = false) }
+                }
         }
     }
 

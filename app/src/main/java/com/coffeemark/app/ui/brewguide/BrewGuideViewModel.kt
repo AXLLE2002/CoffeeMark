@@ -53,7 +53,8 @@ data class BrewGuideState(
 
 class BrewGuideViewModel(
     private val recipeId: String,
-    private val dose: Double? = null   // 准备界面传入的豆量；null 表示用模板基准值
+    private val dose: Double? = null,   // 准备界面传入的豆量；null 表示用模板基准值
+    private val beanId: String? = null  // 准备界面传入的所选豆子；null 表示未选
 ) : ViewModel() {
 
     private val recipeDao = CoffeemarkApp.instance.database.recipeDao()
@@ -276,6 +277,7 @@ class BrewGuideViewModel(
         val recipe = s.recipe ?: return BrewGuidePrefillData()
         return BrewGuidePrefillData(
             recipeId = recipe.id,
+            beanId = beanId ?: "",
             totalWater = recipe.totalWater,
             waterTemp = recipe.waterTemp,
             grindSize = recipe.grindSize,
@@ -292,16 +294,18 @@ class BrewGuideViewModel(
 
     class Factory(
         private val recipeId: String,
-        private val dose: Double? = null
+        private val dose: Double? = null,
+        private val beanId: String? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            BrewGuideViewModel(recipeId, dose) as T
+            BrewGuideViewModel(recipeId, dose, beanId) as T
     }
 }
 
 data class BrewGuidePrefillData(
     val recipeId: String = "",
+    val beanId: String = "",
     val totalWater: Double = 0.0,
     val waterTemp: Int = 92,
     val grindSize: com.coffeemark.app.data.enums.GrindSize = com.coffeemark.app.data.enums.GrindSize.MEDIUM,

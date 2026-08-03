@@ -392,14 +392,26 @@ fun MainScreen() {
                     val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
                     BrewPrepareScreen(
                         recipeId = recipeId,
-                        onStart = { navController.navigate(Routes.brewGuide(recipeId)) },
+                        onStart = { dose, beanId -> navController.navigate(Routes.brewGuide(recipeId, dose, beanId)) },
                         onBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(
                     route = Routes.BREW_GUIDE,
-                    arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
+                arguments = listOf(
+                    navArgument("recipeId") { type = NavType.StringType },
+                    navArgument("dose") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("beanId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                ),
                     enterTransition = {
                         fadeIn(animationSpec = tween(300)) +
                         slideInHorizontally(animationSpec = tween(300)) { it / 4 }
@@ -416,8 +428,12 @@ fun MainScreen() {
                     }
                 ) { backStackEntry ->
                     val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
+                    val dose = backStackEntry.arguments?.getString("dose")?.toDoubleOrNull()
+                    val beanId = backStackEntry.arguments?.getString("beanId")
                     BrewGuideScreen(
                         recipeId = recipeId,
+                        dose = dose,
+                        beanId = beanId,
                         onFinished = { navController.navigate(Routes.brewComplete(recipeId)) }
                     )
                 }

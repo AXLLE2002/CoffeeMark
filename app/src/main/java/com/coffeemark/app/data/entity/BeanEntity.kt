@@ -78,6 +78,9 @@ data class BeanEntity(
     @ColumnInfo(name = "notes")
     val notes: String? = null,
 
+    @ColumnInfo(name = "manual_order")
+    val manualOrder: Int? = null,   // 用户自定义排序（null = 按剩余量默认排序）
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 

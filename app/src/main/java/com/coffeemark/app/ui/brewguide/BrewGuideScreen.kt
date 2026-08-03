@@ -26,6 +26,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import com.coffeemark.app.util.rememberReduceMotion
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -48,8 +52,9 @@ private tailrec fun Context.findComponentActivity(): ComponentActivity? = when (
 fun BrewGuideScreen(
     recipeId: String,
     dose: Double? = null,
+    beanId: String? = null,
     onFinished: () -> Unit,
-    viewModel: BrewGuideViewModel = viewModel(factory = BrewGuideViewModel.Factory(recipeId, dose))
+    viewModel: BrewGuideViewModel = viewModel(factory = BrewGuideViewModel.Factory(recipeId, dose, beanId))
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -88,6 +93,17 @@ fun BrewGuideScreen(
 
     val s = state
     val step = s.currentStep
+
+    // ── 注水涟漪（脉冲：每次进入「注水 / 闷蒸」步时从圆心扩散一次；文本在上、涟漪在下）──
+    val reduceMotion = rememberReduceMotion()
+    val rippleProgress = remember { Animatable(0f) }
+    val isPourStep = step != null && step.actionType in setOf(StepActionType.POUR, StepActionType.BLOOM)
+    LaunchedEffect(state.currentStepIndex, state.countdownNumber) {
+        if (!reduceMotion && state.countdownNumber == 0 && isPourStep) {
+            rippleProgress.snapTo(0f)
+            rippleProgress.animateTo(1f, tween(durationMillis = 900))
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -145,6 +161,33 @@ fun BrewGuideScreen(
                         size = arcSize,
                         style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                     )
+                }
+
+                // 注水涟漪（位于中心文字之下）
+                Canvas(modifier = Modifier.size(220.dp)) {
+                    val p = rippleProgress.value
+                    if (p > 0f) {
+                        val center = Offset(size.width / 2, size.height / 2)
+                        val inner = 26.dp.toPx()
+                        val outer = size.width / 2 - 6.dp.toPx()
+                        val radius = inner + (outer - inner) * p
+                        // 柔和填充（水感）
+                        drawCircle(
+                            color = Caramel,
+                            radius = radius,
+                            center = center,
+                            style = Fill,
+                            alpha = (1f - p) * 0.12f
+                        )
+                        // 扩散圆环
+                        drawCircle(
+                            color = Caramel,
+                            radius = radius,
+                            center = center,
+                            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
+                            alpha = (1f - p) * 0.5f
+                        )
+                    }
                 }
 
                 // 中心文字

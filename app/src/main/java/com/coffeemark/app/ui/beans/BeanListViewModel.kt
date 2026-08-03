@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.coffeemark.app.CoffeemarkApp
 import com.coffeemark.app.data.entity.BeanEntity
+import kotlin.comparisons.compareBy
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -49,7 +50,7 @@ class BeanListViewModel : ViewModel() {
         }
         viewModelScope.launch {
             beanDao.getAll().collect { beans ->
-                _state.update { it.copy(beans = beans) }
+                _state.update { it.copy(beans = sortBeans(beans)) }
             }
         }
         viewModelScope.launch {
@@ -108,6 +109,36 @@ class BeanListViewModel : ViewModel() {
 
     fun deleteBean(beanId: String) {
         viewModelScope.launch { beanDao.deleteById(beanId) }
+    }
+
+    /**
+     * 排序规则：
+     * - 没有任何豆子设置过 manualOrder（默认状态）→ 按剩余量降序（剩余多的在上）
+     * - 已有手动排序 → 按 manualOrder 升序；未设置的（如后新增的豆子）排在末尾
+     */
+    private fun sortBeans(list: List<BeanEntity>): List<BeanEntity> {
+        val hasManual = list.any { it.manualOrder != null }
+        return if (!hasManual) {
+            list.sortedByDescending { it.currentWeight }
+        } else {
+            list.sortedWith(
+                compareBy<BeanEntity> { it.manualOrder ?: Int.MAX_VALUE }
+                    .thenByDescending { it.currentWeight }
+            )
+        }
+    }
+
+    /** 从排序弹层提交：按给定 id 顺序写入 manual_order（落库后 VM 自动重排） */
+    fun saveOrder(orderedIds: List<String>) {
+        viewModelScope.launch {
+            val orders = orderedIds.mapIndexed { index, id -> id to index }.toMap()
+            beanDao.setManualOrders(orders)
+        }
+    }
+
+    /** 重置为默认排序（清空所有 manual_order） */
+    fun resetBeanOrder() {
+        viewModelScope.launch { beanDao.resetManualOrders() }
     }
 
     class Factory : ViewModelProvider.Factory {

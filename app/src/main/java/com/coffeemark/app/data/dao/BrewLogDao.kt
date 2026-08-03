@@ -13,6 +13,9 @@ interface BrewLogDao {
     @Query("SELECT * FROM brew_logs WHERE id = :id")
     suspend fun getById(id: String): BrewLogEntity?
 
+    @Query("SELECT * FROM brew_logs WHERE id = :id")
+    fun observeById(id: String): Flow<BrewLogEntity?>
+
     @Query("SELECT * FROM brew_logs WHERE bean_id = :beanId ORDER BY brew_time DESC")
     fun getByBeanId(beanId: String): Flow<List<BrewLogEntity>>
 

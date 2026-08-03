@@ -101,16 +101,14 @@ class BrewLogEditViewModel(
             loadRecord(brewLogId)
         }
 
-        // 预填模式：从方案跳转
-        if (prefillRecipeId != null) {
-            prefillFromRecipe(prefillRecipeId)
-        }
-
-        // 预填模式：从冲煮引导完成跳转（含实际计时数据）
+        // 预填模式：引导完成跳转（含实际计时数据）优先，且已含方案驱动的水量/水温/研磨/器具
         val appPrefill = CoffeemarkApp.instance.brewGuidePrefillData
         if (appPrefill != null && appPrefill.recipeId == prefillRecipeId) {
             prefillFromGuide(appPrefill)
             CoffeemarkApp.instance.brewGuidePrefillData = null // 消费后清空
+        } else if (prefillRecipeId != null) {
+            // 仅"从方案直接新建记录"（非引导完成）才走这条
+            prefillFromRecipe(prefillRecipeId)
         }
     }
 
@@ -156,16 +154,34 @@ class BrewLogEditViewModel(
     }
 
     private fun prefillFromGuide(data: com.coffeemark.app.ui.brewguide.BrewGuidePrefillData) {
+        val beanId = data.beanId.ifBlank { null }
         _state.update {
             it.copy(
                 totalDuration = data.totalDuration,
                 recipeId = data.recipeId,
+                beanId = beanId,
                 beanUsedWeight = data.groundWeight,   // 引导页粉重 → 预填用豆量
                 totalWater = data.totalWater,
                 waterTemp = data.waterTemp,
                 grindSize = data.grindSize,
                 device = data.device
             )
+        }
+        // 解析已选豆子对象（让"已选豆"高亮 + 重量上限正确）
+        if (beanId != null) {
+            viewModelScope.launch {
+                val bean = beanDao.getById(beanId)
+                if (bean != null) {
+                    _state.update {
+                        it.copy(
+                            selectedBean = bean,
+                            // 自动截断到库存上限，避免保存时扣减成负数
+                            beanUsedWeight = it.beanUsedWeight.coerceAtMost(bean.currentWeight)
+                                .coerceAtLeast(0.0)
+                        )
+                    }
+                }
+            }
         }
     }
 

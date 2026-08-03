@@ -2,17 +2,16 @@ package com.coffeemark.app.ui.beans
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +21,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,12 +33,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CoffeeMaker
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.Reorder
 import com.coffeemark.app.ui.theme.CoffeeCard
 import com.coffeemark.app.ui.components.MetricTile
 import com.coffeemark.app.data.enums.BeanStatus
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.min
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
@@ -51,7 +58,7 @@ private val PIE_COLORS = listOf(
     Color(0xFF4E342E), // 深咖
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BeanListScreen(
     onBeanClick: (String) -> Unit,
@@ -60,6 +67,23 @@ fun BeanListScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val monthFormatter = remember { DateTimeFormatter.ofPattern("yyyy年M月") }
+
+    // 排序弹层状态
+    var showReorder by remember { mutableStateOf(false) }
+    var sheetIds by remember { mutableStateOf<List<String>>(emptyList()) }
+    val sheetListState = rememberLazyListState()
+    var sheetDraggedId by remember { mutableStateOf<String?>(null) }
+    var sheetDragOffsetY by remember { mutableStateOf(0f) }
+    val autoScrollSpeed = remember { mutableStateOf(0f) }
+    val beanMap = remember(state.beans) { state.beans.associateBy { it.id } }
+
+    val commitAndClose: () -> Unit = {
+        viewModel.saveOrder(sheetIds)
+        showReorder = false
+    }
+    val dismissSheet: () -> Unit = {
+        showReorder = false
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0f),
@@ -112,7 +136,7 @@ fun BeanListScreen(
                 }
             }
 
-            // ── 月度使用饼图（始终显示）──
+            // ── 月度使用饼图 ──
             item {
                 BeanUsagePieCard(
                     selectedMonth = state.selectedMonth,
@@ -147,113 +171,297 @@ fun BeanListScreen(
                     }
                 }
             } else {
-                items(state.beans, key = { it.id }) { bean ->
-                    val visibility = remember { MutableTransitionState(false) }.apply {
-                        targetState = true
-                    }
-                    AnimatedVisibility(
-                        visibleState = visibility,
-                        enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { 20 }
+                // 排序标题 + 排序按钮
+                item {
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        var showDeleteDialog by remember { mutableStateOf(false) }
+                        Text("我的豆仓", style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                        TextButton(onClick = {
+                            sheetIds = state.beans.map { it.id }
+                            showReorder = true
+                        }) {
+                            Text("排序", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
 
-                        CoffeeCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .combinedClickable(
-                                    onClick = { onBeanClick(bean.id) },
-                                    onLongClick = { showDeleteDialog = true }
-                                ),
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    StatusChip(bean.status)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(bean.name, style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                                    bean.roastLevel?.let {
-                                        Text(it.label, style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
-
-                                Spacer(Modifier.height(6.dp))
-
-                                if (!bean.flavorTags.isNullOrEmpty()) {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        bean.flavorTags.take(3).forEach { tag ->
-                                            SuggestionChip(
-                                                onClick = {},
-                                                label = { Text(tag, style = MaterialTheme.typography.labelSmall) },
-                                                modifier = Modifier.height(24.dp)
-                                            )
-                                        }
-                                        if (bean.flavorTags.size > 3) {
-                                            Text("+${bean.flavorTags.size - 3}", style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                    }
-                                    Spacer(Modifier.height(6.dp))
-                                }
-
-                                val subInfo = listOfNotNull(bean.origin, bean.varietal).joinToString(" · ")
-                                if (subInfo.isNotBlank()) {
-                                    Text(subInfo, style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-
-                                Spacer(Modifier.height(8.dp))
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                Spacer(Modifier.height(8.dp))
-
-                                // 重量进度条：剩余占比
-                                val remainingFraction =
-                                    (bean.currentWeight / bean.netWeight).toFloat().coerceIn(0f, 1f)
-                                LinearProgressIndicator(
-                                    progress = { remainingFraction },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(4.dp),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.outlineVariant,
-                                )
-                                Spacer(Modifier.height(8.dp))
-
-                                Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("剩余 ${bean.currentWeight.toLong().coerceAtLeast(0)}g",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Medium)
-                                    Text("¥${String.format("%.2f", bean.pricePerGram)}/g",
-                                        style = MaterialTheme.typography.labelSmall,
+                items(state.beans, key = { it.id }) { bean ->
+                    CoffeeCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onBeanClick(bean.id) },
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                StatusChip(bean.status)
+                                Spacer(Modifier.width(8.dp))
+                                Text(bean.name, style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                                bean.roastLevel?.let {
+                                    Text(it.label, style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                        }
 
-                        if (showDeleteDialog) {
-                            AlertDialog(
-                                onDismissRequest = { showDeleteDialog = false },
-                                title = { Text("删除豆子") },
-                                text = { Text("确定删除「${bean.name}」吗？") },
-                                confirmButton = {
-                                    TextButton(onClick = {
-                                        viewModel.deleteBean(bean.id)
-                                        showDeleteDialog = false
-                                    }) { Text("删除", color = MaterialTheme.colorScheme.error) }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = { showDeleteDialog = false }) { Text("取消") }
+                            Spacer(Modifier.height(6.dp))
+
+                            if (!bean.flavorTags.isNullOrEmpty()) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    bean.flavorTags.take(3).forEach { tag ->
+                                        SuggestionChip(
+                                            onClick = {},
+                                            label = { Text(tag, style = MaterialTheme.typography.labelSmall) },
+                                            modifier = Modifier.height(24.dp)
+                                        )
+                                    }
+                                    if (bean.flavorTags.size > 3) {
+                                        Text("+${bean.flavorTags.size - 3}", style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
                                 }
+                                Spacer(Modifier.height(6.dp))
+                            }
+
+                            val subInfo = listOfNotNull(bean.origin, bean.varietal).joinToString(" · ")
+                            if (subInfo.isNotBlank()) {
+                                Text(subInfo, style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            Spacer(Modifier.height(8.dp))
+
+                            val remainingFraction =
+                                (bean.currentWeight / bean.netWeight).toFloat().coerceIn(0f, 1f)
+                            LinearProgressIndicator(
+                                progress = { remainingFraction },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.outlineVariant,
                             )
+                            Spacer(Modifier.height(8.dp))
+
+                            Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("剩余 ${bean.currentWeight.toLong().coerceAtLeast(0)}g",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium)
+                                Text("¥${String.format("%.2f", bean.pricePerGram)}/g",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }
             }
         }
     }
+
+    // ── 排序弹层：半屏底部弹层，暗色遮罩，原页面顶部仍可见 ──
+    if (showReorder) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .zIndex(10f)
+        ) {
+            // 暗色遮罩：原页面可见但变暗，点击取消排序
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.32f))
+                    .clickable { dismissSheet() }
+            )
+            // 半屏弹层：从底部弹出，原页面顶部 38% 仍可见
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp,
+                shape = BottomSheetDefaults.ExpandedShape,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.62f)
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "提示：请长按每一个豆条进行拖拽排序",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // 拖拽时持续边缘自动滚动：速度随手指进入边缘深度平滑增长，
+                // 用独立协程循环驱动（而非每次 onDrag 事件各 scroll 一次，那样会瞬移）。
+                LaunchedEffect(showReorder) {
+                    if (!showReorder) return@LaunchedEffect
+                    while (true) {
+                        val speed = autoScrollSpeed.value
+                        if (speed != 0f) {
+                            val consumed = sheetListState.scrollBy(speed)
+                            // 自动滚动会移动内容，若不补偿被拖豆条会脱离手指并触发失控滚动；
+                            // 把已滚动的位移补回拖拽偏移，使豆条始终钉在手指下方。
+                            sheetDragOffsetY += consumed
+                        }
+                        delay(16)
+                    }
+                }
+
+                LazyColumn(
+                    state = sheetListState,
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    items(items = sheetIds, key = { it -> it }) { id ->
+                        val bean = beanMap[id] ?: return@items
+                        val isDragging = sheetDraggedId == id
+                        CoffeeCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .zIndex(if (isDragging) 1f else 0f)
+                                .graphicsLayer {
+                                    translationY = if (isDragging) sheetDragOffsetY else 0f
+                                    shadowElevation = if (isDragging) 8.dp.toPx() else 0f
+                                }
+                                .pointerInput(id) {
+                                    detectDragGesturesAfterLongPress(
+                                        onDragStart = { sheetDraggedId = id },
+                                        onDrag = { change, dragAmount ->
+                                            change.consume()
+                                            val draggedId = sheetDraggedId ?: return@detectDragGesturesAfterLongPress
+                                            val list = sheetIds
+                                            val from = list.indexOf(draggedId)
+                                            if (from !in list.indices) return@detectDragGesturesAfterLongPress
+                                            // 手指位移直接累加，拖动的豆条 1:1 跟手
+                                            sheetDragOffsetY += dragAmount.y
+
+                                            val layoutInfo = sheetListState.layoutInfo
+                                            val draggedInfo = layoutInfo.visibleItemsInfo
+                                                .firstOrNull { it.key == draggedId }
+                                                ?: return@detectDragGesturesAfterLongPress
+                                            val itemSize = draggedInfo.size
+                                            val centerY = draggedInfo.offset + sheetDragOffsetY + itemSize / 2f
+
+                                            // 找到手指中心当前落在哪个条目区间内，跨过则交换
+                                            val target = layoutInfo.visibleItemsInfo
+                                                .firstOrNull { centerY >= it.offset && centerY <= it.offset + it.size }
+                                            if (target != null && target.key != draggedId) {
+                                                val to = list.indexOf(target.key)
+                                                if (to != -1 && to != from) {
+                                                    val oldDraggedOffset = draggedInfo.offset
+                                                    val oldTargetOffset = target.offset
+                                                    sheetIds = sheetIds.toMutableList().also { l -> l.add(to, l.removeAt(from)) }
+                                                    // 交换后保持被拖豆条视觉位置不变（仍在手指下方）
+                                                    sheetDragOffsetY -= (oldTargetOffset - oldDraggedOffset)
+                                                }
+                                            }
+
+                                            // 靠近视口上下边缘时平滑自动滚动，越界越深越快
+                                            val vp = layoutInfo
+                                            val threshold = 90f
+                                            val maxSpeed = 16f
+                                            val overStart = (vp.viewportStartOffset + threshold) - centerY
+                                            val overEnd = centerY - (vp.viewportEndOffset - threshold)
+                                            autoScrollSpeed.value = when {
+                                                overStart > 0f -> -(min(overStart, maxSpeed))
+                                                overEnd > 0f -> min(overEnd, maxSpeed)
+                                                else -> 0f
+                                            }
+                                        },
+                                        onDragEnd = {
+                                            sheetDraggedId = null
+                                            sheetDragOffsetY = 0f
+                                            autoScrollSpeed.value = 0f
+                                        },
+                                        onDragCancel = {
+                                            sheetDraggedId = null
+                                            sheetDragOffsetY = 0f
+                                            autoScrollSpeed.value = 0f
+                                        }
+                                    )
+                                },
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Filled.Reorder,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(bean.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+                                    Text(
+                                        "剩余 ${bean.currentWeight.toLong().coerceAtLeast(0)}g",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { commitAndClose() },
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Text("保存当前排序")
+                    }
+                    TextButton(
+                        onClick = { dismissSheet() },
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Text("取消")
+                    }
+                }
+            }
+        }
+        }
+    }
 }
+
 
 // ── 月度饼图卡片 ──
 @OptIn(ExperimentalMaterial3Api::class)

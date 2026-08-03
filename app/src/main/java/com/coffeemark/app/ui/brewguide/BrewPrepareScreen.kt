@@ -1,6 +1,8 @@
 package com.coffeemark.app.ui.brewguide
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,16 +18,29 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FreeBreakfast
 import androidx.compose.material.icons.filled.PlayArrow
 import com.coffeemark.app.util.TimeFormatUtil
+import com.coffeemark.app.CoffeemarkApp
+import com.coffeemark.app.data.entity.BeanEntity
+import kotlinx.coroutines.flow.firstOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrewPrepareScreen(
     recipeId: String,
-    onStart: (Double?) -> Unit,
+    onStart: (Double?, String?) -> Unit,
     onBack: () -> Unit,
     viewModel: BrewGuideViewModel = viewModel(factory = BrewGuideViewModel.Factory(recipeId))
 ) {
     val state by viewModel.state.collectAsState()
+
+    // 可选豆子列表（排除已用完的），用于准备页选择并把 beanId 透传到记录页
+    val beans = remember { mutableStateOf<List<BeanEntity>>(emptyList()) }
+    var selectedBeanId by remember { mutableStateOf<String?>(null) }
+    var beanMenuExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        beans.value = CoffeemarkApp.instance.database.beanDao().getAll()
+            .firstOrNull().orEmpty()
+            .filter { it.currentWeight > 0 }
+    }
 
     // 豆量输入框（预填模板基准粉量）；修改后实时换算总注水量
     var doseText by remember { mutableStateOf("") }
@@ -69,9 +84,10 @@ fun BrewPrepareScreen(
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding)
                     .imePadding()
+                    .verticalScroll(rememberScrollState())
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Top
             ) {
                 Icon(Icons.Filled.FreeBreakfast, null, Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f))
@@ -106,6 +122,38 @@ fun BrewPrepareScreen(
 
                 Spacer(Modifier.height(24.dp))
 
+                // 豆子选择（可选）：选了会一路透传到记录页自动选好，不选则记录页仍需手选
+                ExposedDropdownMenuBox(
+                    expanded = beanMenuExpanded,
+                    onExpandedChange = { beanMenuExpanded = it }
+                ) {
+                    val selectedBean = beans.value.firstOrNull { it.id == selectedBeanId }
+                    OutlinedTextField(
+                        value = selectedBean?.name ?: "（不预选，稍后在记录页选）",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("豆子（可选）") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = beanMenuExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = beanMenuExpanded,
+                        onDismissRequest = { beanMenuExpanded = false }
+                    ) {
+                        beans.value.forEach { bean ->
+                            DropdownMenuItem(
+                                text = { Text("${bean.name} · 剩 ${bean.currentWeight.toLong()}g") },
+                                onClick = {
+                                    selectedBeanId = bean.id
+                                    beanMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
                 // 豆量输入框：输入后各阶段水量按粉水比自动缩放
                 OutlinedTextField(
                     value = doseText,
@@ -134,7 +182,7 @@ fun BrewPrepareScreen(
                 Spacer(Modifier.height(32.dp))
 
                 Button(
-                    onClick = { onStart(dose) },
+                    onClick = { onStart(dose, selectedBeanId) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {

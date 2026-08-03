@@ -5,10 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.coffeemark.app.CoffeemarkApp
 import com.coffeemark.app.data.entity.BeanEntity
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class BeanDetailState(
@@ -24,9 +21,11 @@ class BeanDetailViewModel(private val beanId: String) : ViewModel() {
     val state: StateFlow<BeanDetailState> = _state.asStateFlow()
 
     init {
+        // 监听数据库流：从编辑页保存后 popBackStack 返回本页时，数据会实时刷新
         viewModelScope.launch {
-            val bean = beanDao.getById(beanId)
-            _state.update { it.copy(bean = bean, isLoading = false) }
+            beanDao.observeById(beanId).collect { bean ->
+                _state.update { it.copy(bean = bean, isLoading = false) }
+            }
         }
     }
 

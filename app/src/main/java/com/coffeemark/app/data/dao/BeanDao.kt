@@ -14,6 +14,9 @@ interface BeanDao {
     @Query("SELECT * FROM beans WHERE id = :id")
     suspend fun getById(id: String): BeanEntity?
 
+    @Query("SELECT * FROM beans WHERE id = :id")
+    fun observeById(id: String): Flow<BeanEntity?>
+
     @Query("SELECT * FROM beans WHERE status = :status ORDER BY roast_date DESC")
     fun getByStatus(status: BeanStatus): Flow<List<BeanEntity>>
 
@@ -61,4 +64,16 @@ interface BeanDao {
         WHERE id = :beanId
     """)
     suspend fun restoreStock(beanId: String, usedWeight: Double, timestamp: Long = System.currentTimeMillis())
+
+    // ── 用户自定义排序 ──
+    @Query("UPDATE beans SET manual_order = :order WHERE id = :id")
+    suspend fun updateManualOrder(id: String, order: Int)
+
+    @Transaction
+    suspend fun setManualOrders(orders: Map<String, Int>) {
+        orders.forEach { (id, order) -> updateManualOrder(id, order) }
+    }
+
+    @Query("UPDATE beans SET manual_order = NULL")
+    suspend fun resetManualOrders()
 }

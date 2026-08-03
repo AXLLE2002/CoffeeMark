@@ -10,10 +10,7 @@ import com.coffeemark.app.data.entity.RecipeEntity
 import com.coffeemark.app.data.entity.RecipeStepEntity
 import com.coffeemark.app.data.enums.GrindSize
 import com.coffeemark.app.data.enums.StepActionType
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class BrewLogDetailState(
@@ -36,11 +33,26 @@ class BrewLogDetailViewModel(private val brewLogId: String) : ViewModel() {
     val state: StateFlow<BrewLogDetailState> = _state.asStateFlow()
 
     init {
+        // 监听记录、关联豆子、关联方案流：从编辑页保存后返回本页会实时刷新
         viewModelScope.launch {
-            val log = brewLogDao.getById(brewLogId)
-            val bean = log?.let { beanDao.getById(it.beanId) }
-            val recipe = log?.recipeId?.let { recipeDao.getById(it) }
-            _state.update { it.copy(brewLog = log, bean = bean, recipe = recipe, isLoading = false) }
+            brewLogDao.observeById(brewLogId)
+                .flatMapLatest { log ->
+                    val beanFlow: Flow<BeanEntity?> = if (log?.beanId != null) {
+                        beanDao.observeById(log.beanId)
+                    } else {
+                        flowOf<BeanEntity?>(null)
+                    }
+                    val recipeFlow: Flow<RecipeEntity?> = if (log?.recipeId != null) {
+                        recipeDao.observeById(log.recipeId)
+                    } else {
+                        flowOf<RecipeEntity?>(null)
+                    }
+                    combine(beanFlow, recipeFlow) { bean, recipe -> log to (bean to recipe) }
+                }
+                .collect { (log, beanRecipe) ->
+                    val (bean, recipe) = beanRecipe
+                    _state.update { it.copy(brewLog = log, bean = bean, recipe = recipe, isLoading = false) }
+                }
         }
     }
 

@@ -13,6 +13,9 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes WHERE id = :id")
     suspend fun getById(id: String): RecipeEntity?
 
+    @Query("SELECT * FROM recipes WHERE id = :id")
+    fun observeById(id: String): Flow<RecipeEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(recipe: RecipeEntity)
 
